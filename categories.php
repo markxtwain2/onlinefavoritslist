@@ -46,7 +46,7 @@
 				<div id="trash_list">
 					<?php
 						$user_cats = get_user_categories($_SESSION['username']);
-						while($cats = mysql_fetch_array($user_cats)) {
+						while($cats = mysqli_fetch_array($user_cats)) {
 							$cat_name = $cats['category_name'];
 							$cat_length = 43;
 							echo '<div class="trashed_item">';

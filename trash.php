@@ -52,7 +52,7 @@
 						else {							
 							$trash_list = get_trashed_items($_SESSION['username']);
 							$list_length = 70;
-							while($list = mysql_fetch_array($trash_list)) {
+							while($list = mysqli_fetch_array($trash_list)) {
 								$pt = $list['page_title'];
 								if(strlen($pt) > $list_length) {
 									$pt = substr($pt, 0, $list_length) . '...';

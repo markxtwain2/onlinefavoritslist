@@ -9,14 +9,9 @@
 	error_reporting(0);
 
 //  variables -----------------------------------------
-	$connection = mysql_connect(SERVER, USER, PASS);
+	$connection = mysqli_connect(SERVER, USER, PASS, DBNAME);
 	if(!$connection) {
-		die('Mysql connection error: ' . mysql_error());
-	}
-	
-	$database = mysql_select_db(DBNAME, $connection);
-	if(!$database) {
-		die('Mysql database error: '. mysql_error());
+		die('Mysql connection error: ' . mysqli_error());
 	}
 //  ---------------------------------------------------
 	
@@ -47,7 +42,7 @@
 //	General functions ---------------------------------
 	function execute_query($sql) {
 		Global $connection;
-		$result = mysql_query($sql, $connection);
+		$result = mysqli_query($connection, $sql);
 		// check_query_error($result);
 		return $result;
 	}
@@ -55,14 +50,14 @@
 	function get_user_id($username) {
 		Global $connection;
 		$sql = 'SELECT id FROM users WHERE username = "'.$username.'"';
-		$result = mysql_query($sql, $connection);
-		$user_id = mysql_fetch_array($result);
+		$result = mysqli_query($connection, $sql);
+		$user_id = mysqli_fetch_array($result);
 		return $user_id['id'];
 	}
 
 	function check_query_error($input) {
 		if(!$input) {
-			die('MySQL query error: ' . mysql_error());
+			die('MySQL query error: ' . mysqli_error());
 		}
 	}
 //	---------------------------------------------------
@@ -123,7 +118,7 @@
 	
 	function print_favorites_list($list, $username) {
 		$settings = get_user_settings($username);		
-		while($fav_list = mysql_fetch_array($list)) {
+		while($fav_list = mysqli_fetch_array($list)) {
 			$title = $fav_list['page_title'];
                         if(empty($title)) {
 	                        $title = '[ unknown title ]';
@@ -149,7 +144,7 @@
 	function delete_fav($id) {
 		Global $connection;
 		$sql = 'UPDATE favorites SET trashed = 1 WHERE id = ' . $id;
-		$result = mysql_query($sql, $connection);
+		$result = mysqli_query($connection, $sql);
 		// check_query_error($result);
 		redirect('index.php');
 	}
@@ -182,9 +177,9 @@
 		else {			
 			$sql = 'SELECT COUNT(user_id) FROM favorites WHERE user_id="'.$user_id.'" AND trashed = 0';		
 		}
-		$sql_result = mysql_query($sql, $connection);
+		$sql_result = mysqli_query($connection, $sql);
 		// check_query_error($sql_result);
-		$result = mysql_fetch_array($sql_result);
+		$result = mysqli_fetch_array($sql_result);
 		return $result['COUNT(user_id)'];
 	}
 //	--------------------------------------
@@ -209,7 +204,7 @@
 			$sql = 'SELECT * FROM favorites WHERE id="'.$_GET['id'].'"';
 			$result = execute_query($sql);
 			// check_query_error($result);
-			$edit_info = mysql_fetch_array($result);
+			$edit_info = mysqli_fetch_array($result);
 			echo '<label>Title: </label><input class="text" type="text" name="title" 
 			      value="'.$edit_info['page_title'].'" /><br />
 				  <label>URL: </label><input class="text" type="text" name="url" 
@@ -231,7 +226,7 @@
 		$sql = 'SELECT * FROM users WHERE username = "'.$username.'"';
 		$result = execute_query($sql);
 		// check_query_error($result);
-		return mysql_fetch_array($result);
+		return mysqli_fetch_array($result);
 	}
 	
 	function update_profile($username, $password, $email) {
@@ -242,7 +237,7 @@
 		$id = get_user_id($username);
 		$sql = 'UPDATE users SET password="'.$password.'", email="'.$email.'" 
 			    WHERE id="'.$id.'"';
-		$result = mysql_query($sql, $connection);
+		$result = mysqli_query($connection, $sql);
 		// check_query_error($result);
 		return '<h4 class="success">Profile updated successfully. 
 				<a href="index.php">back to favorites list</a></h4>';
@@ -262,7 +257,7 @@
 	function remove_list($user_id) {
 		Global $connection;
 		$sql = 'DELETE FROM favorites WHERE user_id = "'.$user_id.'"';
-		$result = mysql_query($sql, $connection);
+		$result = mysqli_query($connection, $sql);
 		// check_query_error($result);
 	}
 //  --------------------------------------
@@ -270,7 +265,7 @@
 //	user categories functions-------------
 	function check_user_categories($user_id) {
 		$sql = 'SELECT * FROM categories WHERE user_id = "'.$user_id.'"';
-		$result = mysql_fetch_array(execute_query($sql));
+		$result = mysqli_fetch_array(execute_query($sql));
 		if(empty($result)) {
 			set_main_category($user_id);
 		}
@@ -292,7 +287,7 @@
 
 	function print_options_user_categories($username) {
 		$cats = get_user_categories($username);
-		while($cat = mysql_fetch_array($cats)) {
+		while($cat = mysqli_fetch_array($cats)) {
 			if(!($cat['category_name'] == 'Main')) {
 				echo "\t\t\t\t\t\t";
 			}
@@ -305,7 +300,7 @@
 		if(isset($_SESSION['selected_cat'])) {
 			$cat_id = $_SESSION['selected_cat'];
 		}
-		while($cat = mysql_fetch_array($cats)) {
+		while($cat = mysqli_fetch_array($cats)) {
 			if(!($cat['category_name'] == 'Main')) {
 				echo "\t\t\t\t\t\t";
 			}
@@ -320,7 +315,7 @@
 	function get_main_category_id($username) {
 		$user_id = get_user_id($username);
 		$sql = 'SELECT id FROM categories WHERE user_id="'.$user_id.'" AND category_name="Main"';
-		$result = mysql_fetch_array(execute_query($sql));
+		$result = mysqli_fetch_array(execute_query($sql));
 		return $result['id'];
 	}
 
@@ -329,7 +324,7 @@
 		if(isset($id)) {
 			$cat_id = get_favorite_category($id);
 		}
-		while($cat = mysql_fetch_array($cats)) {
+		while($cat = mysqli_fetch_array($cats)) {
 			if(!($cat['category_name'] == 'Main')) {
 				echo "\t\t\t\t\t\t";
 			}
@@ -344,14 +339,14 @@
 	function get_favorite_category($id) {
 		$sql = 'SELECT category_id FROM favorites WHERE id=' . $id;
 		$result = execute_query($sql);
-		$result = mysql_fetch_array($result);
+		$result = mysqli_fetch_array($result);
 		return $result['category_id'];
 	}
 
 	function count_cats($username) {
 		$user_id = get_user_id($username);
 		$sql = 'SELECT COUNT(*) FROM categories WHERE user_id = ' . $user_id;
-		$result = mysql_fetch_array(execute_query($sql));
+		$result = mysqli_fetch_array(execute_query($sql));
 		return $result['COUNT(*)'];
 	}
 
@@ -359,7 +354,7 @@
 		$user_id = get_user_id($username);
 		$sql = 'SELECT COUNT(*) FROM favorites WHERE user_id = "'.$user_id.'"
 			AND category_id = "'.$cat_id.'" AND trashed = 0';
-		$result = mysql_fetch_array(execute_query($sql));
+		$result = mysqli_fetch_array(execute_query($sql));
 		return $result['COUNT(*)'];
 	}
 
@@ -406,7 +401,7 @@
 		$user_id = get_user_id($username);
 		$sql = 'SELECT * FROM categories 
 				WHERE user_id = "'.$user_id.'" AND category_name = "'.$cat_name.'"';
-		$result = mysql_fetch_array(execute_query($sql));
+		$result = mysqli_fetch_array(execute_query($sql));
 		if(empty($result)) {
 			return false;
 		}
@@ -425,7 +420,7 @@
 	function compare_by_all_main_cats($cat_id) {
 		$sql = 'SELECT * FROM categories';
 		$result = execute_query($sql);
-		while($cats = mysql_fetch_array($result)) {
+		while($cats = mysqli_fetch_array($result)) {
 			if($cats['category_name'] == 'Main' && $cats['id'] == $cat_id) {
 				redirect('categories.php');
 			}
@@ -435,7 +430,7 @@
 	function get_category_name($cat_id, $username) {
 		$user_id = get_user_id($username);
 		$sql = 'SELECT * FROM categories WHERE id = ' . $cat_id;
-		$result = mysql_fetch_array(execute_query($sql));
+		$result = mysqli_fetch_array(execute_query($sql));
 		return $result['category_name'];
 	}
 
@@ -454,7 +449,7 @@
 		Global $connection;
 		$user_id = get_user_id($username);
 		$sql = 'SELECT * FROM favorites WHERE user_id = "'.$user_id.'" AND trashed = 1';
-		$list = mysql_query($sql, $connection);
+		$list = mysqli_query($connection, $sql);
 		// check_query_error($list);
 		return $list;
 	}
@@ -463,7 +458,7 @@
 		Global $connection;
 		$user_id = get_user_id($username);
 		$sql = 'UPDATE favorites SET trashed = 0 WHERE user_id = ' . $user_id . ' AND trashed = 1';
-		$result = mysql_query($sql, $connection);
+		$result = mysqli_query($connection, $sql);
 		// check_query_error($result);
 	}
 	
@@ -471,7 +466,7 @@
 		Global $connection;
 		$user_id = get_user_id($username);
 		$sql = 'DELETE FROM favorites WHERE user_id = "'.$user_id.'" AND trashed = 1';
-		$result = mysql_query($sql, $connection);
+		$result = mysqli_query($connection, $sql);
 		// check_query_error($result);
 	}
 		
@@ -479,7 +474,7 @@
 		Global $connection;
 		if(isset($id)) {
 			$sql = 'UPDATE favorites SET trashed = 0 WHERE id = ' . $id;
-			$result = mysql_query($sql, $connection);			
+			$result = mysqli_query($connection, $sql);			
 			// check_query_error($result);
 		}
 	}
@@ -487,7 +482,7 @@
 	function trash_item_delete($id) {
 		Global $connection;			
 		$sql = 'DELETE FROM favorites WHERE id = ' . $id;
-		$result = mysql_query($sql, $connection);
+		$result = mysqli_query($connection, $sql);
 		// check_query_error($result);
 	}
 	
@@ -495,9 +490,9 @@
 		Global $connection;
 		$user_id = get_user_id($username);
 		$sql = 'SELECT COUNT(*) FROM favorites WHERE user_id = ' . $user_id . ' AND trashed = 1';
-		$sql_result = mysql_query($sql, $connection);
+		$sql_result = mysqli_query($connection, $sql);
 		// check_query_error($sql_result);
-		$result = mysql_fetch_array($sql_result);
+		$result = mysqli_fetch_array($sql_result);
 		return $result['COUNT(*)'];
 	}
 //	--------------------------------------
@@ -507,7 +502,7 @@
 		$user_id = get_user_id($username);
 		$sql = 'SELECT * FROM user_settings WHERE user_id = "'.$user_id.'"';
 		$result = execute_query($sql);
-		$settings = mysql_fetch_array($result);
+		$settings = mysqli_fetch_array($result);
 		if(empty($settings) || $settings == NULL) {
 			set_new_user_settings($username);
 		}
@@ -538,7 +533,7 @@
 		Global $connection;
 		$user_id = get_user_id($username);
 		$sql = 'SELECT * FROM user_settings WHERE user_id="'.$user_id.'"';
-		return mysql_fetch_array(mysql_query($sql, $connection));
+		return mysqli_fetch_array(mysqli_query($connection, $sql));
 	}
 
 	function set_choices($option, $username) {
@@ -572,7 +567,7 @@
 		$sql = 'SELECT password 
 			    FROM users 
 			    WHERE password="'.$password.'" AND username="'.$username.'"';
-		$check_pass = mysql_fetch_array(mysql_query($sql, $connection));
+		$check_pass = mysqli_fetch_array(mysqli_query($connection, $sql));
 		if($check_pass == "") {
 			return false;
 		}
@@ -604,7 +599,7 @@
 	function username_exists($username) {
 		Global $connection;
 		$sql = 'SELECT username FROM users WHERE username = "'.$username.'"';
-		$check_username = mysql_fetch_array(mysql_query($sql, $connection));
+		$check_username = mysqli_fetch_array(mysqli_query($connection, $sql));
 		if($check_username == "") {
 			return false;
 		}
